@@ -1,0 +1,4 @@
+*.sqlite3
+Gopkg.lock
+Gopkg.toml
+vendor
