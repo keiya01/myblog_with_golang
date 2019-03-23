@@ -23,6 +23,14 @@ func (s *Service) FindAll(model interface{}, order string, where ...interface{})
 	return nil
 }
 
+func (s *Service) FindOne(model interface{}, where ...interface{}) error {
+	if db := s.First(model, where...); db.Error != nil {
+		return errors.Wrap(db.Error, "FindOne()")
+	}
+
+	return nil
+}
+
 func (s *Service) Save(model interface{}) error {
 	if db := s.Create(model); db.Error != nil {
 		return errors.Wrap(db.Error, "Save()")

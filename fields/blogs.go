@@ -10,8 +10,9 @@ import (
 
 type Blog struct {
 	ID        int       `gorm:"primary_key" json:"id"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
+	Title     string    `gorm:"not null" json:"title"`
+	Body      string    `gorm:"not null" json:"body"`
+	UserID    int       `gorm:"not null" json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -28,16 +29,34 @@ var BlogType = graphql.NewObject(graphql.ObjectConfig{
 		"body": &graphql.Field{
 			Type: graphql.String,
 		},
+		"user_id": &graphql.Field{
+			Type: graphql.Int,
+		},
+		"created_at": &graphql.Field{
+			Type: graphql.DateTime,
+		},
 	},
 })
 
-var BlogList = &graphql.Field{
+var GetBlogList = &graphql.Field{
 	Type: graphql.NewList(BlogType),
+	Args: graphql.FieldConfigArgument{
+		"user_id": &graphql.ArgumentConfig{
+			Type: graphql.Int,
+		},
+	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 		db := database.NewHandler()
 		s := service.NewService(db)
+
+		var where []interface{}
+		userID, ok := p.Args["user_id"].(int)
+		if ok {
+			where = []interface{}{"user_id = ?", userID}
+		}
 		blogs := []Blog{}
-		if err := s.FindAll(&blogs, "created_at desc"); err != nil {
+
+		if err := s.FindAll(&blogs, "created_at desc", where...); err != nil {
 			log.Println(err)
 			return blogs, err
 		}
@@ -56,16 +75,22 @@ var CreateBlog = &graphql.Field{
 		"body": &graphql.ArgumentConfig{
 			Type: graphql.NewNonNull(graphql.String),
 		},
+		"user_id": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 		db := database.NewHandler()
 		s := service.NewService(db)
 
 		params := p.Args
-
+		title, _ := params["title"].(string)
+		body, _ := params["body"].(string)
+		userID, _ := params["user_id"].(int)
 		blog := &Blog{
-			Title: params["title"].(string),
-			Body:  params["body"].(string),
+			Title:  title,
+			Body:   body,
+			UserID: userID,
 		}
 		if err := s.Save(&blog); err != nil {
 			log.Println(err)

@@ -47,7 +47,10 @@ func (s *Server) Route() {
 			http.Error(w, err.Error(), 500)
 			return
 		}
-		result := graphql.ExecuteQuery(params["query"].(string))
+
+		query, _ := params["query"].(string)
+		variables, _ := params["variables"].(map[string]interface{})
+		result := graphql.ExecuteQuery(query, variables)
 		json.NewEncoder(w).Encode(result)
 	})
 

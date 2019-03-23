@@ -7,4 +7,5 @@ import (
 
 func Set(db *gorm.DB) {
 	db.AutoMigrate(&fields.Blog{})
+	db.AutoMigrate(&fields.User{})
 }

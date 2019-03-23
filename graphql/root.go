@@ -11,13 +11,15 @@ func GetSchema() graphql.Schema {
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name: "RootQuery",
 			Fields: graphql.Fields{
-				"blogList": fields.BlogList,
+				"blogList": fields.GetBlogList,
+				"user":     fields.GetUser,
 			},
 		}),
 		Mutation: graphql.NewObject(graphql.ObjectConfig{
 			Name: "RootMutation",
 			Fields: graphql.Fields{
 				"createBlog": fields.CreateBlog,
+				"createUser": fields.CreatUser,
 			},
 		}),
 	}
@@ -30,17 +32,18 @@ func GetSchema() graphql.Schema {
 	return schema
 }
 
-func ExecuteQuery(query string) *graphql.Result {
+func ExecuteQuery(query string, variables map[string]interface{}) *graphql.Result {
 	schema := GetSchema()
 
-	params := graphql.Params{Schema: schema, RequestString: query}
+	params := graphql.Params{
+		Schema:         schema,
+		RequestString:  query,
+		VariableValues: variables,
+	}
 	r := graphql.Do(params)
 	if len(r.Errors) > 0 {
 		log.Printf("failed to execute graphql operation, errors: %+v", r.Errors)
 	}
 
 	return r
-
-	// rJSON, _ := json.Marshal(r)
-	// fmt.Printf("%s \n", rJSON) // {“data”:{“hello”:”world”}}
 }
